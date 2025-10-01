@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Batch 2021 Photos</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDKs (compat for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="firebase.js"></script>
+  <style>
+    body { background: linear-gradient(180deg, #fff7ed, #ffedd5); margin:0; }
+    .container { max-width: 1100px; margin: 20px auto; padding: 20px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .uploader { display:flex; gap:8px; flex-wrap:wrap; }
+    .uploader input[type="text"], .uploader input[type="file"] { padding:10px 12px; border:2px solid #e5e7eb; border-radius:10px; font-size:14px; font-family:inherit; }
+    .btn { background:#ea580c; color:#fff; padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-weight:600; }
+    a { color:#ea580c; }
+  </style>
+  <script>
+    async function loadPhotos() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      const snapshot = await firebase.firestore().collection('photos').orderBy('ts','desc').limit(200).get();
+      snapshot.forEach(doc => {
+        const p = doc.data();
+        const card = document.createElement('div');
+        card.className = 'polaroid';
+        const src = p.url;
+        const name = (p.name || 'Anonymous').replace(/</g,'&lt;');
+        card.innerHTML = `<img src="${src}" alt="photo"><div class="caption"><strong>${name}</strong>${p.caption? ' — ' + (p.caption||'').replace(/</g,'&lt;') : ''}</div>`;
+        grid.appendChild(card);
+      });
+    }
+    async function addPhoto() {
+      const fileEl = document.getElementById('photoFile');
+      const caption = document.getElementById('photoCaption').value.trim();
+      const name = (document.getElementById('photoName').value || '').trim() || 'Anonymous';
+      if (!fileEl.files || !fileEl.files[0]) return;
+      const file = fileEl.files[0];
+      const storageRef = firebase.storage().ref();
+      const path = `photos/${Date.now()}_${file.name}`;
+      const snap = await storageRef.child(path).put(file);
+      const url = await snap.ref.getDownloadURL();
+      await firebase.firestore().collection('photos').add({ url, caption, name, ts: Date.now() });
+      fileEl.value='';
+      document.getElementById('photoCaption').value='';
+      document.getElementById('photoName').value='';
+      loadPhotos();
+    }
+    window.addEventListener('DOMContentLoaded', loadPhotos);
+  </script>
+  </head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h2 style="margin:0">Photos</h2>
+      <a href="index.html" class="btn" style="text-decoration:none">← Back to Home</a>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3 style="margin:0 0 8px 0">Upload Memory</h3>
+      <div class="uploader">
+        <input id="photoName" type="text" placeholder="Your name (or leave blank for Anonymous)" style="flex:1;min-width:220px">
+        <input id="photoFile" type="file" accept="image/*" style="flex:2;min-width:220px">
+        <input id="photoCaption" type="text" placeholder="Caption (optional)" style="flex:2;min-width:220px">
+        <button class="btn" onclick="addPhoto()" style="flex:0">Add</button>
+      </div>
+    </div>
+    <div class="polaroid-grid" id="grid" style="margin-top:14px"></div>
+  </div>
+</body>
+</html>
+

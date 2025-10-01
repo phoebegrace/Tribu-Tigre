@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Batch Alumni Reunion Hub</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDKs (compat for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="firebase.js"></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-content">
+      <div class="brand">
+        <img src="gjfpns logo.png" alt="Batch Logo" />
+        <div>
+          <h1>Batch 2021 Reunion</h1>
+          <div class="sub">Friday • December 27, 2025 • GJFPNS</div>
+        </div>
+      </div>
+
+      <div class="hero-row" style="margin-top:14px">
+        <div class="hero-left">
+          <p style="margin:0;font-size:15px;color:var(--muted)">A hub for everything Alumni related. rawr p ;p</p>
+
+          <div class="cta">
+            <button class="btn" id="rsvpBtn">Confirm Attendance</button>
+            <button class="btn ghost" id="payBtn">Payment Info</button>
+            <button class="btn ghost" id="suggestBtn">Suggest Ideas</button>
+          </div>
+
+          <div class="countdown" id="countdown">
+            <div class="count-item"><strong id="d">0</strong><span>Days</span></div>
+            <div class="count-item"><strong id="h">0</strong><span>Hours</span></div>
+            <div class="count-item"><strong id="m">0</strong><span>Minutes</span></div>
+            <div class="count-item"><strong id="s">0</strong><span>Seconds</span></div>
+          </div>
+
+          <div class="hero-foot">
+            <div class="tag">Private • Batch 2021</div>
+            <img class="logo-small" src="jabee.png" alt="Organizer" title="Lead Organizer" />
+          </div>
+
+        </div>
+        <div class="hero-right">
+          <img src="jabee.png" alt="Hero Image" class="hero-image" />
+          <div style="font-size:13px;color:var(--muted)">Sponsor / Organizer: Jabee Lee • Batch '21</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right column could be an image or quick stats -->
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:stretch">
+      <div class="card">
+        <h3>Quick Stats</h3>
+        <div style="display:flex;gap:8px;flex-direction:column">
+          <div><strong id="comingCount">0</strong> confirmed</div>
+          <div><strong id="paidCount">0</strong> paid</div>
+          <div><strong id="suggestCount">0</strong> suggestions</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Next Reminder</h3>
+        <div style="color:var(--muted)">Payment deadline: <strong>November 15, 2025</strong></div>
+        <div style="margin-top:10px"><button class="btn" id="remindBtn">Send Reminder</button></div>
+      </div>
+
+      <div class="card">
+        <h3>Venue</h3>
+        <div style="color:var(--muted);font-size:14px">GJFPNS • 6PM</div>
+        <a href="https://maps.google.com" target="_blank" style="margin-top:8px;display:inline-block;color:var(--primary)">Open in Google Maps</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid">
+      <div class="card">
+        <h3>Quick Access</h3>
+        <div class="quick-grid" style="margin-top:10px">
+          <div class="quick" onclick="openLink('rsvp')">RSVP<br><small>Confirm attendance</small></div>
+          <div class="quick" onclick="openLink('payments')">Payments<br><small>Upload proof</small></div>
+          <div class="quick" onclick="openLink('food')">Food Poll<br><small>Choose menu</small></div>
+          <div class="quick" onclick="openLink('suggest')">Suggestions<br><small>Share ideas</small></div>
+          <div class="quick" onclick="openLink('photos')">Photos<br><small>Upload memories</small></div>
+          <div class="quick" onclick="openLink('contact')">Contact Organizers<br><small>Questions?</small></div>
+          <div class="quick" onclick="openLink('community')">Community<br><small>Batch group chat</small></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Announcements</h3>
+        <div class="ann-list" id="annList">
+          <!-- announcements pulled from JS -->
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Event Program</h3>
+        <div class="program" id="programList">
+          <!-- program items from JS -->
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:18px">
+      <div class="card">
+        <h3>Food Overview</h3>
+        <p style="color:var(--muted);margin-top:6px">See current poll results — use this to finalize orders.</p>
+        <table style="margin-top:10px">
+          <thead><tr><th>Dish</th><th>Votes</th></tr></thead>
+          <tbody id="foodTable">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+      <div class="card">
+        <h3>Payment Breakdown (Aramutan)</h3>
+        <p style="color:var(--muted);margin-top:6px;font-size:14px">Here's where your contribution goes:</p>
+        <div class="payment-breakdown">
+
+          <div class="payment-item">
+            <div class="payment-label">
+              <span class="payment-icon">🍽️</span>
+              <span>Food & Catering</span>
+            </div>
+            <div class="payment-amount">₱200</div>
+          </div>
+ 
+          <div class="payment-item">
+            <div class="payment-label">
+              <span class="payment-icon">🎤</span>
+              <span>T-shirt</span>
+            </div>
+            <div class="payment-amount">₱300</div>
+          </div>
+
+          <div class="payment-item">
+            <div class="payment-label">
+              <span class="payment-icon">🎁</span>
+              <span>Food-to-share ('Cluster S Contribution')</span>
+            </div>
+            <div class="payment-amount">₱15</div>
+          </div>
+
+          <div class="payment-item">
+            <div class="payment-label">
+              <span class="payment-icon">📸</span>
+              <span>Decorations</span>
+            </div>
+            <div class="payment-amount">₱30</div>
+          </div>
+
+          <div class="payment-item">
+            <div class="payment-label">
+              <span class="payment-icon">🎨</span>
+              <span>Coronation (optional)</span>
+            </div>
+            <div class="payment-amount">any amount</div>
+          </div>
+
+          <div class="payment-item payment-total">
+            <div class="payment-label">
+              <strong>Total per person</strong>
+            </div>
+            <div class="payment-amount"><strong>₱545</strong></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:#fff7ed;border-radius:8px;font-size:14px">
+          <strong>Payment Instructions:</strong><br>
+          <span style="color:var(--muted)">Send to GCash: 0912-345-6789 (Jabee Lee) • Upload proof in Payments section</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Sponsors 💝</h3>
+        <p style="color:var(--muted);margin-top:6px;font-size:14px">Special thanks to those who contributed extra!</p>
+        <div class="sponsors-list" id="sponsorsList">
+          <div class="sponsor-item">
+            <div class="sponsor-info">
+              <strong>Jabee Lee</strong>
+              <span class="sponsor-badge">Lead Organizer</span>
+            </div>
+            <div class="sponsor-amount">₱5,000</div>
+          </div>
+          <div class="sponsor-item">
+            <div class="sponsor-info">
+              <strong>Ana Dela Cruz</strong>
+              <span class="sponsor-badge">Lechon Sponsor</span>
+            </div>
+            <div class="sponsor-amount">₱3,000</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:14px;background:linear-gradient(135deg, #fff7ed, #ffedd5);border-radius:10px;text-align:center">
+          <p style="margin:0 0 10px 0;font-size:14px;color:var(--muted)">Want to sponsor something?</p>
+          <button class="btn" onclick="openSponsorModal()">Become a Sponsor</button>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:18px;display:grid;grid-template-columns:1fr 320px;gap:18px">
+      <div class="card">
+        <h3>Suggestions</h3>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <input id="suggestName" type="text" placeholder="Your name (or leave blank for Anonymous)" style="flex:2;min-width:220px;padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit">
+          <input id="suggestInput" type="text" placeholder="Share an idea..." style="flex:3;min-width:260px;padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit">
+          <button class="btn" id="suggestSubmitBtn" style="flex:0">Post</button>
+        </div>
+        <div id="suggestionsBox" style="margin-top:10px">
+          <!-- suggestion items -->
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Organizers</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+          <div style="display:flex;gap:10px;align-items:center">
+            <img src="jabee.png" style="height:44px;width:44px;border-radius:8px;object-fit:cover" alt="Jabee" />
+            <div>
+              <strong>Jabee Lee</strong><br><small class="sub">Lead Organizer • +63 912 345 6789</small>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <img src="logo.png" style="height:44px;width:44px;border-radius:8px;object-fit:cover" alt="Co Organizer" />
+            <div>
+              <strong>Ana Dela Cruz</strong><br><small class="sub">Payments • +63 921 444 5555</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+      <div>Batch 2021 • Alumni Reunion Hub</div>
+      <div style="color:var(--muted)">Built with ❤️ • Organizer Team</div>
+    </div>
+  </footer>
+
+  <!-- Modal skeletons for quick actions -->
+  <div class="modal" id="modal">
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong id="modalTitle">Modal</strong>
+        <button class="close" onclick="closeModal()">Close</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- RSVP Form Modal -->
+  <div class="modal" id="rsvpModal">
+    <div class="box form-box">
+      <div class="form-header">
+        <div>
+          <h2 class="form-title">RSVP for Reunion</h2>
+          <p class="form-subtitle">We'd love to see you there! Please confirm your attendance.</p>
+        </div>
+        <button class="close-btn" onclick="closeRSVPModal()">✕</button>
+      </div>
+      
+      <form id="rsvpForm" class="rsvp-form">
+        <div class="form-group">
+          <label for="fullName">Full Name <span class="required">*</span></label>
+          <input type="text" id="fullName" name="fullName" required placeholder="Juan Dela Cruz">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address <span class="required">*</span></label>
+          <input type="email" id="email" name="email" required placeholder="juan@example.com">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="grade10Section">Grade 10 Section <span class="required">*</span></label>
+            <select id="grade10Section" name="grade10Section" required>
+              <option value="">Select section...</option>
+              <option value="na">Not applicable</option>
+              <option value="charity">Charity</option>
+              <option value="hope">Hope</option>
+              <option value="faith">Faith</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="grade12Section">Grade 12 Section <span class="required">*</span></label>
+            <select id="grade12Section" name="grade12Section" required>
+              <option value="">Select section...</option>
+              <option value="na">Not applicable</option>
+              <option value="stem">STEM</option>
+              <option value="humms">HUMMS</option>
+              <option value="abm">ABM</option>
+              <option value="tvl-tile">TVL - Tile Setting</option>
+              <option value="tvl-food">TVL - Food</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Will you be attending? <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="attending" value="yes" required>
+              <span class="radio-custom"></span>
+              <span class="radio-label">
+                <strong>Yes, I'll be there! 🎉</strong>
+                <small>Can't wait to see everyone</small>
+              </span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="attending" value="no" required>
+              <span class="radio-custom"></span>
+              <span class="radio-label">
+                <strong>Sorry, I can't make it 😔</strong>
+                <small>Will be there in spirit</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="attendanceChecklist" style="display:none">
+          <label>Which parts will you attend? <span class="required">*</span></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="attendanceParts" value="caravan"> Caravan</label>
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="attendanceParts" value="lunch"> Lunch</label>
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="attendanceParts" value="afternoon"> Afternoon event</label>
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="attendanceParts" value="coronation"> Coronation / night event</label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeRSVPModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Submit RSVP</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sponsor Modal -->
+  <div class="modal" id="sponsorModal">
+    <div class="box form-box">
+      <div class="form-header">
+        <div>
+          <h2 class="form-title">Become a Sponsor 💝</h2>
+          <p class="form-subtitle">Help make our reunion more memorable!</p>
+        </div>
+        <button class="close-btn" onclick="closeSponsorModal()">✕</button>
+      </div>
+      
+      <form id="sponsorForm" class="rsvp-form">
+        <div class="form-group">
+          <label for="sponsorName">Your Name <span class="required">*</span></label>
+          <input type="text" id="sponsorName" name="sponsorName" required placeholder="Juan Dela Cruz">
+        </div>
+
+        <div class="form-group">
+          <label for="sponsorEmail">Email Address <span class="required">*</span></label>
+          <input type="email" id="sponsorEmail" name="sponsorEmail" required placeholder="juan@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="sponsorAmount">Sponsorship Amount <span class="required">*</span></label>
+          <input type="number" id="sponsorAmount" name="sponsorAmount" required placeholder="1000" min="100">
+        </div>
+
+        <div class="form-group">
+          <label for="sponsorItem">What would you like to sponsor? <span class="optional">(Optional)</span></label>
+          <select id="sponsorItem" name="sponsorItem">
+            <option value="">Select item...</option>
+            <option value="food">Food & Catering</option>
+            <option value="venue">Venue Rental</option>
+            <option value="sound">Sound System</option>
+            <option value="prizes">Games & Prizes</option>
+            <option value="photo">Photo/Video Coverage</option>
+            <option value="decorations">Decorations</option>
+            <option value="general">General Fund</option>
+            <option value="other">Other (specify in message)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sponsorMessage">Message <span class="optional">(Optional)</span></label>
+          <textarea id="sponsorMessage" name="sponsorMessage" rows="3" placeholder="Any special message or request..." style="width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:15px;font-family:inherit;resize:vertical"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeSponsorModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Submit Sponsorship</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Payments Modal -->
+  <div class="modal" id="paymentModal">
+    <div class="box form-box">
+      <div class="form-header">
+        <div>
+          <h2 class="form-title">Submit Payment Proof</h2>
+          <p class="form-subtitle">Log your payment so organizers can verify it.</p>
+        </div>
+        <button class="close-btn" onclick="closePaymentModal()">✕</button>
+      </div>
+      <form id="paymentForm" class="rsvp-form">
+        <div class="form-group">
+          <label for="payerName">Your Name <span class="required">*</span></label>
+          <input type="text" id="payerName" name="payerName" required placeholder="Juan Dela Cruz">
+        </div>
+        <div class="form-group">
+          <label for="payerProofFile">Proof Image (optional)</label>
+          <input type="file" id="payerProofFile" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="paymentAmount">Amount (₱) <span class="required">*</span></label>
+          <input type="number" id="paymentAmount" name="paymentAmount" required placeholder="300" min="1">
+        </div>
+        <div class="form-group">
+          <label for="paymentMethod">Method <span class="required">*</span></label>
+          <select id="paymentMethod" name="paymentMethod" required>
+            <option value="">Select method...</option>
+            <option value="gcash">GCash</option>
+            <option value="cash">Cash</option>
+            <option value="bank">Bank Transfer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="paymentRef">Reference No. <span class="optional">(If applicable)</span></label>
+          <input type="text" id="paymentRef" name="paymentRef" placeholder="0000-0000-0000">
+        </div>
+        <div class="form-group">
+          <label for="proofUrl">Proof Link <span class="optional">(Upload to Drive/Photos and paste link)</span></label>
+          <input type="url" id="proofUrl" name="proofUrl" placeholder="https://drive.google.com/...">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closePaymentModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div class="modal" id="contactModal">
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong>Contact Organizers</strong>
+        <button class="close" onclick="closeContactModal()">Close</button>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <img src="jabee.png" style="height:56px;width:56px;border-radius:10px;object-fit:cover" alt="Phoebe" />
+        <div>
+          <div style="font-weight:700">Phoebe Grace Juayong</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+            <a href="https://m.me/juayongphoebe" target="_blank" style="color:var(--primary)">Messenger</a>
+            <a href="mailto:juayongphoebe@gmail.com" target="_blank" style="color:var(--primary)">Email</a>
+            <a href="tel:09618080709" style="color:var(--primary)">Call 0961 808 0709</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
